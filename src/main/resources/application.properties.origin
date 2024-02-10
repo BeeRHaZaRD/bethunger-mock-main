@@ -1,0 +1,6 @@
+server.port=8081
+
+jwt.token=
+base_url=http://localhost:8080
+
+logging.level.com.hg.bethungermockmain=debug

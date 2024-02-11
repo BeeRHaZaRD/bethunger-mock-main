@@ -68,7 +68,7 @@ public class EventService {
             }
 
             webClient.post()
-                .uri("/games/%d/happenedEvents".formatted(gameId))
+                .uri("/games/" + gameId + "/happened-events")
                 .bodyValue(happenedEventDTO)
                 .retrieve()
                 .toBodilessEntity()
@@ -90,7 +90,7 @@ public class EventService {
         }
         log.debug("Game #%d - Planned event requested".formatted(gameId));
         webClient.post()
-            .uri("/games/" + gameId + "/happenedEvents")
+            .uri("/games/" + gameId + "/happened-events")
             .bodyValue(new HPlannedEventDTO(plannedEvent.id()))
             .retrieve()
             .toBodilessEntity()

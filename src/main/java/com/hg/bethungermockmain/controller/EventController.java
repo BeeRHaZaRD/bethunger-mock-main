@@ -21,7 +21,7 @@ public class EventController {
         this.eventService = eventService;
     }
 
-    @PostMapping(path = "/plannedEvent")
+    @PostMapping(path = "/planned-event")
     public void runPlannedEvent(@RequestBody @Valid PlannedEventRequestDTO plannedEventRequestDTO) {
         eventService.runPlannedEvent(plannedEventRequestDTO);
     }

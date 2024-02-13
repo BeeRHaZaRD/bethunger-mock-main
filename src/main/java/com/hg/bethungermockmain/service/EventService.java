@@ -5,6 +5,7 @@ import com.hg.bethungermockmain.model.HappenedEventType;
 import com.hg.bethungermockmain.model.PlayerEventType;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,17 +15,30 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadLocalRandom;
 
 @CommonsLog
 @Service
 public class EventService {
-    private final Random random = new Random();
+    private final Random random = ThreadLocalRandom.current();
     private Long gameId;
     private List<Long> alivePlayers;
     private ScheduledFuture<?> generateEventsScheduler;
 
     private final WebClient webClient;
     private final TaskScheduler taskScheduler;
+
+    @Value("${planned_event_delay}")
+    private Duration plannedEventDelay;
+
+    @Value("${supply_delay}")
+    private Duration supplyDelay;
+
+    @Value("${event_gen_delay}")
+    private Duration eventGenDelay;
+
+    @Value("${event_gen_interval}")
+    private Duration eventGenInterval;
 
     @Autowired
     public EventService(WebClient webClient, TaskScheduler taskScheduler) {
@@ -41,10 +55,6 @@ public class EventService {
 
     // randomly generates PLAYER and OTHER events
     private void generateEvents() {
-        if (this.gameId == null || this.alivePlayers == null) {
-            throw new IllegalStateException("init method wasn't called");
-        }
-
         Runnable generateEventsTask = () -> {
             HappenedEventDTO happenedEventDTO;
             // player or other event
@@ -80,7 +90,8 @@ public class EventService {
                 generateEventsScheduler.cancel(true);
             }
         };
-        generateEventsScheduler = taskScheduler.scheduleWithFixedDelay(generateEventsTask, Instant.now().plusSeconds(5), Duration.ofSeconds(5));
+        generateEventsScheduler = taskScheduler.scheduleWithFixedDelay(generateEventsTask, Instant.now().plus(eventGenDelay), eventGenInterval);
+        log.debug("Game #%d - STARTED".formatted(gameId));
     }
 
     public void runPlannedEvent(PlannedEventRequestDTO plannedEvent) {
@@ -89,12 +100,34 @@ public class EventService {
             throw new IllegalStateException("Game has already finished");
         }
         log.debug("Game #%d - Planned event requested".formatted(gameId));
+
+        var body = new HPlannedEventDTO(plannedEvent.id());
         webClient.post()
             .uri("/games/" + gameId + "/happened-events")
-            .bodyValue(new HPlannedEventDTO(plannedEvent.id()))
+            .bodyValue(body)
             .retrieve()
             .toBodilessEntity()
-            .delaySubscription(Duration.ofSeconds(15))
+            .delaySubscription(plannedEventDelay)
+            .subscribe();
+    }
+
+    public void makeSupply(SupplyRequestDTO supplyRequest) {
+        Long gameId = this.gameId;
+        if (gameId == null) {
+            throw new IllegalStateException("Game has already finished");
+        }
+        if (!alivePlayers.contains(supplyRequest.playerId())) {
+            throw new IllegalStateException("Player is already dead");
+        }
+        log.debug("Game #%d - Supply requested".formatted(gameId));
+
+        var body = new HSupplyEventDTO(supplyRequest.id());
+        webClient.post()
+            .uri("/games/" + gameId + "/happened-events")
+            .bodyValue(body)
+            .retrieve()
+            .toBodilessEntity()
+            .delaySubscription(supplyDelay)
             .subscribe();
     }
 

@@ -3,4 +3,9 @@ server.port=8081
 jwt.token=
 base_url=http://localhost:8080
 
+planned_event_delay=15s
+supply_delay=15s
+event_gen_delay=5s
+event_gen_interval=60s
+
 logging.level.com.hg.bethungermockmain=debug

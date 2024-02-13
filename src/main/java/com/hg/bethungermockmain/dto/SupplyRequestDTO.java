@@ -1,4 +1,14 @@
 package com.hg.bethungermockmain.dto;
 
-public record SupplyRequestDTO(Long id, Long itemId) {
-}
+import jakarta.validation.constraints.NotNull;
+
+public record SupplyRequestDTO(
+    @NotNull
+    Long id,
+
+    @NotNull
+    Long playerId,
+
+    @NotNull
+    Long itemId
+) {}

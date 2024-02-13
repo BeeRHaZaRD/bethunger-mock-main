@@ -5,7 +5,6 @@ import com.hg.bethungermockmain.dto.SupplyRequestDTO;
 import com.hg.bethungermockmain.service.EventService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +26,7 @@ public class EventController {
     }
 
     @PostMapping(path = "/supply")
-    public ResponseEntity<Object> runSupply(@RequestBody SupplyRequestDTO supplyRequestDTO) {
-        return null;
+    public void makeSupply(@RequestBody SupplyRequestDTO supplyRequestDTO) {
+        eventService.makeSupply(supplyRequestDTO);
     }
 }
